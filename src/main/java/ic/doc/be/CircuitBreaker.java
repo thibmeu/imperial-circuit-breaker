@@ -28,15 +28,23 @@ public class CircuitBreaker {
 
     static class Website extends HttpServlet {
         private int numberOfRequests = 0;
-        private long lastRequestTime = currentTime();
+        private long lastRequestTime = 0;
+        private final long DELAY = 14000;
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            long timeSinceLastRequest = currentTime() - lastRequestTime;
+            long timeRemaining = DELAY - timeSinceLastRequest;
+            boolean isBroken = timeSinceLastRequest < DELAY;
+
+            numberOfRequests++;
             // if true, forward the request, if the system is overloaded it will break
-            if (false) {
+            if (!isBroken) {
+                lastRequestTime = currentTime();
+                numberOfRequests = 1;
                 new ApiResponse(fetchDataFrom(WEATHER_URI)).writeTo(resp);
             } else {
-                new ApiResponse("Latest temp forecast: " + "[wasn't able to retrieve forecast data]").writeTo(resp);
+                new ApiResponse("Latest temp forecast: " + "[wasn't able to retrieve forecast data]\n" + "You attempted " + numberOfRequests + " while the system is still overloaded. Retry in " + timeRemaining + "ms").writeTo(resp);
             }
         }
 
