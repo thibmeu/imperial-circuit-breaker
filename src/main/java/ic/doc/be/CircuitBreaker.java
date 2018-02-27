@@ -28,15 +28,25 @@ public class CircuitBreaker {
 
     static class Website extends HttpServlet {
         private int numberOfRequests = 0;
-        private long lastRequestTime = currentTime();
+        private long lastRequestTime = 0;
+        private final long DELAY = 14000;
+        private String cached = "";
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            // if true, forward the request, if the system is overloaded it will break
-            if (false) {
-                new ApiResponse(fetchDataFrom(WEATHER_URI)).writeTo(resp);
+            long timeSinceLastRequest = currentTime() - lastRequestTime;
+            long timeRemaining = DELAY - timeSinceLastRequest;
+            boolean isBroken = timeSinceLastRequest < DELAY;
+
+            numberOfRequests++;
+            // I know that if there are too may requests in a short amount of time my system won't handle it
+            if (!isBroken) {
+                lastRequestTime = currentTime();
+                numberOfRequests = 1;
+                cached = fetchDataFrom(WEATHER_URI);
+                new ApiResponse(cached).writeTo(resp);
             } else {
-                new ApiResponse("Latest temp forecast: " + "[wasn't able to retrieve forecast data]").writeTo(resp);
+                new ApiResponse("Latest temp forecast: " + cached + "\n" + "There was " + numberOfRequests + " while the system is still overloaded. Retry in " + timeRemaining + "ms").writeTo(resp);
             }
         }
 
