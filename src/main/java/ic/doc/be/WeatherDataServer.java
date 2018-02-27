@@ -4,7 +4,7 @@ import java.util.concurrent.*;
 
 public class WeatherDataServer extends BackEndWebServer {
 
-    private static final int DEFAULT_PORT = 5002;
+    private static final int DEFAULT_PORT = 5053;
 
     public WeatherDataServer(int port, DataSource dataSource) throws Exception {
         super(port, dataSource);
